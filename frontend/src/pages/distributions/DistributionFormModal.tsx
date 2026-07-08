@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { todayIsoDate } from "@/utils/format";
+import { blockDigits, blockLetters } from "@/utils/inputGuards";
 
 const schema = z.object({
   institutionId: z
@@ -102,7 +103,9 @@ export function DistributionFormModal({ onClose }: DistributionFormModalProps) {
             type="number"
             step="0.001"
             min={0.001}
+            placeholder="Ex: 10"
             error={errors.quantity?.message}
+            onKeyDown={blockLetters}
             {...register("quantity")}
           />
           <Input
@@ -115,10 +118,17 @@ export function DistributionFormModal({ onClose }: DistributionFormModalProps) {
         </div>
         <Input
           label="Responsável"
+          placeholder="Ex: João Pereira"
           error={errors.responsibleName?.message}
+          onKeyDown={blockDigits}
           {...register("responsibleName")}
         />
-        <Textarea label="Observação" error={errors.observation?.message} {...register("observation")} />
+        <Textarea
+          label="Observação"
+          placeholder="Ex: Entrega realizada na sede da instituição"
+          error={errors.observation?.message}
+          {...register("observation")}
+        />
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar

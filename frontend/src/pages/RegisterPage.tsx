@@ -9,6 +9,7 @@ import { extractErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { blockDigits } from "@/utils/inputGuards";
 
 const schema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(150),
@@ -55,11 +56,18 @@ export function RegisterPage() {
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <ErrorBanner message={serverError} />
-          <Input label="Nome" error={errors.name?.message} {...register("name")} />
+          <Input
+            label="Nome"
+            placeholder="Ex: Ana Souza"
+            error={errors.name?.message}
+            onKeyDown={blockDigits}
+            {...register("name")}
+          />
           <Input
             label="Email"
             type="email"
             autoComplete="email"
+            placeholder="ex: ana@email.com"
             error={errors.email?.message}
             {...register("email")}
           />
@@ -67,6 +75,7 @@ export function RegisterPage() {
             label="Senha"
             type="password"
             autoComplete="new-password"
+            placeholder="Mínimo 8 caracteres"
             error={errors.password?.message}
             {...register("password")}
           />

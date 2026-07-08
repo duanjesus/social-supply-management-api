@@ -10,7 +10,8 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { formatCnpj } from "@/utils/format";
+import { formatCnpj, formatPhone } from "@/utils/mask";
+import { blockDigits, blockLetters } from "@/utils/inputGuards";
 
 const schema = z.object({
   name: z.string().min(1, "O nome é obrigatório").max(150),
@@ -42,8 +43,6 @@ export function InstitutionFormModal({ institution, onClose }: InstitutionFormMo
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -88,30 +87,69 @@ export function InstitutionFormModal({ institution, onClose }: InstitutionFormMo
     <Modal title={isEditing ? "Editar instituição" : "Nova instituição"} isOpen onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <ErrorBanner message={serverError} />
-        <Input label="Nome" error={errors.name?.message} {...register("name")} />
+        <Input
+          label="Nome"
+          placeholder="Ex: Casa de Apoio São José"
+          error={errors.name?.message}
+          onKeyDown={blockDigits}
+          {...register("name")}
+        />
         <Input
           label="CNPJ"
           placeholder="00.000.000/0000-00"
+          inputMode="numeric"
+          maxLength={18}
           error={errors.cnpj?.message}
-          value={watch("cnpj")}
-          onChange={(e) => setValue("cnpj", formatCnpj(e.target.value), { shouldValidate: true })}
+          onKeyDown={blockLetters}
+          {...register("cnpj", {
+            onChange: (e) => {
+              e.target.value = formatCnpj(e.target.value);
+            },
+          })}
         />
-        <Input label="Endereço" error={errors.address?.message} {...register("address")} />
+        <Input
+          label="Endereço"
+          placeholder="Ex: Rua das Flores, 123 - Centro"
+          error={errors.address?.message}
+          {...register("address")}
+        />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Telefone" error={errors.phone?.message} {...register("phone")} />
-          <Input label="Email" type="email" error={errors.email?.message} {...register("email")} />
+          <Input
+            label="Telefone"
+            placeholder="(00) 00000-0000"
+            inputMode="numeric"
+            maxLength={15}
+            error={errors.phone?.message}
+            onKeyDown={blockLetters}
+            {...register("phone", {
+              onChange: (e) => {
+                e.target.value = formatPhone(e.target.value);
+              },
+            })}
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="ex: contato@instituicao.org"
+            error={errors.email?.message}
+            {...register("email")}
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Responsável"
+            placeholder="Ex: Maria Silva"
             error={errors.responsibleName?.message}
+            onKeyDown={blockDigits}
             {...register("responsibleName")}
           />
           <Input
             label="Famílias atendidas"
             type="number"
             min={0}
+            placeholder="Ex: 25"
             error={errors.familiesServed?.message as string | undefined}
+            onKeyDown={blockLetters}
             {...register("familiesServed")}
           />
         </div>

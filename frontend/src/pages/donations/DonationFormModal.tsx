@@ -13,6 +13,8 @@ import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { todayIsoDate } from "@/utils/format";
+import { formatCpfCnpj } from "@/utils/mask";
+import { blockDigits, blockLetters } from "@/utils/inputGuards";
 
 const schema = z.object({
   donorName: z.string().min(1, "O nome do doador é obrigatório").max(150),
@@ -65,8 +67,26 @@ export function DonationFormModal({ onClose }: DonationFormModalProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <ErrorBanner message={serverError} />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Doador" error={errors.donorName?.message} {...register("donorName")} />
-          <Input label="Documento" error={errors.donorDocument?.message} {...register("donorDocument")} />
+          <Input
+            label="Doador"
+            placeholder="Ex: Carlos Andrade"
+            error={errors.donorName?.message}
+            onKeyDown={blockDigits}
+            {...register("donorName")}
+          />
+          <Input
+            label="Documento"
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={18}
+            error={errors.donorDocument?.message}
+            onKeyDown={blockLetters}
+            {...register("donorDocument", {
+              onChange: (e) => {
+                e.target.value = formatCpfCnpj(e.target.value);
+              },
+            })}
+          />
         </div>
         <Select
           label="Produto"
@@ -87,7 +107,9 @@ export function DonationFormModal({ onClose }: DonationFormModalProps) {
             type="number"
             step="0.001"
             min={0.001}
+            placeholder="Ex: 10"
             error={errors.quantity?.message}
+            onKeyDown={blockLetters}
             {...register("quantity")}
           />
           <Input
@@ -98,7 +120,12 @@ export function DonationFormModal({ onClose }: DonationFormModalProps) {
             {...register("donationDate")}
           />
         </div>
-        <Textarea label="Observação" error={errors.description?.message} {...register("description")} />
+        <Textarea
+          label="Observação"
+          placeholder="Ex: Doação da campanha do agasalho"
+          error={errors.description?.message}
+          {...register("description")}
+        />
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar

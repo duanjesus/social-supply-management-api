@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { blockDigits } from "@/utils/inputGuards";
 
 const schema = z.object({
   name: z.string().min(1, "O nome do produto é obrigatório").max(150),
@@ -78,8 +79,19 @@ export function ProductFormModal({ product, onClose }: ProductFormModalProps) {
     <Modal title={isEditing ? "Editar produto" : "Novo produto"} isOpen onClose={onClose}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <ErrorBanner message={serverError} />
-        <Input label="Nome" error={errors.name?.message} {...register("name")} />
-        <Textarea label="Descrição" error={errors.description?.message} {...register("description")} />
+        <Input
+          label="Nome"
+          placeholder="Ex: Arroz, Feijão, Sabonete"
+          error={errors.name?.message}
+          onKeyDown={blockDigits}
+          {...register("name")}
+        />
+        <Textarea
+          label="Descrição"
+          placeholder="Ex: Pacote de 1kg, tipo 1"
+          error={errors.description?.message}
+          {...register("description")}
+        />
         <div className="grid grid-cols-2 gap-4">
           <Select label="Categoria" error={errors.category?.message} {...register("category")}>
             {PRODUCT_CATEGORIES.map((category) => (
