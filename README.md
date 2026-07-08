@@ -181,12 +181,46 @@ mvn test
 | GET    | `/api/v1/distributions/{id}`    | Find distribution by ID          |
 | GET    | `/api/v1/distributions`         | List distributions (paginated)   |
 
+### Authentication — `/api/v1/auth`
+
+Every endpoint above (except `/api/v1/auth/**` and Swagger itself) requires a valid JWT sent in the `Authorization: Bearer {token}` header. `DELETE` endpoints additionally require the `ADMIN` role.
+
+| Method | Route                    | Description                          |
+|--------|--------------------------|-----------------------------------------|
+| POST   | `/api/v1/auth/register`  | Register a new user (ADMIN or OPERATOR) |
+| POST   | `/api/v1/auth/login`     | Authenticate and receive a JWT token    |
+
+**Register:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Ana Souza", "email": "ana@example.org", "password": "supersecret123", "role": "ADMIN"}'
+```
+
+**Login:**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ana@example.org", "password": "supersecret123"}'
+```
+
+Both return a JSON body containing the `token` field. Use it in subsequent requests:
+
+```bash
+curl http://localhost:8080/api/v1/institutions \
+  -H "Authorization: Bearer {token}"
+```
+
+In Swagger UI, click the **Authorize** button (top right) and paste the token to have it applied automatically to every "Try it out" call.
+
 ---
 
 ## 🗺️ Roadmap
 
 - [x] **V1** — Core registrations (institutions, products), donations and distributions
-- [ ] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
+- [x] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
 - [ ] **V2** — Real-time inventory control (stock balance per product, low-quantity alerts)
 - [ ] **V3** — Dashboard with metrics (families served, most-donated products, most active institutions)
 - [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
