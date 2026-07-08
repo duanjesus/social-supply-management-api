@@ -14,12 +14,12 @@ public class OpenApiConfig {
     public OpenAPI doacoesOpenApi() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Doações API")
-                        .description("API para gestão de instituições, produtos, doações e distribuições de alimentos pela prefeitura")
+                        .title("Social Supply Management API")
+                        .description("API for managing institutions, products, donations and distributions in social food supply programs")
                         .version("v1.0.0")
                         .contact(new Contact()
-                                .name("Prefeitura - Assistência Social")
-                                .email("contato@prefeitura.gov.br"))
+                                .name("Social Assistance Department")
+                                .email("contact@social-supply.example.org"))
                         .license(new License()
                                 .name("MIT")
                                 .url("https://opensource.org/licenses/MIT")));
