@@ -1,139 +1,141 @@
 <div align="center">
 
-# 🍲 Doações API
+# Social Supply Management API
 
-### Sistema de gestão de instituições, produtos, doações e distribuições de alimentos para prefeituras
+### Backend application for managing institutions, donations, inventory and food distribution in social supply programs
 
 [![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-brightgreen?logo=springboot)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker)](https://www.docker.com/)
 [![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions)](https://github.com/features/actions)
-[![License](https://img.shields.io/badge/license-MIT-lightgrey)](#-licença)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)](#-license)
 
 </div>
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Demonstração da API via Swagger" width="850">
+  <img src="docs/demo.gif" alt="API demo via Swagger UI" width="850">
   <br>
-  <sub><i>📌 Grave um GIF navegando pelo Swagger (ex: <a href="https://www.screentogif.com/">ScreenToGif</a>) e salve em <code>docs/demo.gif</code> para substituir este placeholder.</i></sub>
+  <sub><i>📌 Record a GIF walking through Swagger (e.g. <a href="https://www.screentogif.com/">ScreenToGif</a>) and save it to <code>docs/demo.gif</code> to replace this placeholder.</i></sub>
 </p>
 
 ---
 
-## 📖 Sobre o projeto
+## 📖 About the project
 
-A **Doações API** foi criada para apoiar prefeituras na gestão do ciclo completo de assistência social alimentar:
+**Social Supply Management API** supports the full lifecycle of a social food assistance program:
 
-> Instituições cadastradas ➜ recebem **doações** de produtos ➜ que entram no **estoque** ➜ e são **distribuídos** de volta para as instituições que atendem famílias em situação de vulnerabilidade.
+> Registered institutions ➜ receive **donations** of products ➜ that enter the **inventory** ➜ and are **distributed** back to institutions supporting families in vulnerable situations.
 
-Este é o repositório da **V1**, com o núcleo de cadastros e movimentações funcionando de ponta a ponta, arquitetura em camadas bem definida e testes automatizados — pronto para evoluir com autenticação, controle de estoque em tempo real e dashboards.
+Inspired by real operational processes observed in social supply chain management, this project simulates the backend of a system that any municipality or NGO network could use to coordinate food donations and distribution — with clean architecture, automated tests, containerization, and CI from day one.
+
+This is the **V1** repository: the core registrations and movements work end-to-end, with a clear layered architecture and automated tests — ready to evolve with authentication, real-time inventory control, and dashboards.
 
 ---
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
-O projeto segue uma arquitetura em camadas (*layered architecture*), com separação clara de responsabilidades:
+The project follows a layered architecture with clear separation of concerns:
 
 ```
                                 ┌───────────────────┐
-                                │     Controller     │  → Recebe requisições HTTP, valida entrada (DTO)
+                                │     Controller      │  → Handles HTTP requests, validates input (DTO)
                                 └─────────┬───────────┘
                                           │
                                 ┌─────────▼───────────┐
-                                │       Service        │  → Regras de negócio, orquestra transações
+                                │       Service         │  → Business rules, transaction orchestration
                                 └─────────┬───────────┘
                                           │
                          ┌────────────────┼────────────────┐
                          │                                 │
                ┌─────────▼──────────┐          ┌───────────▼───────────┐
-               │      Mapper         │          │      Repository        │  → Acesso a dados (Spring Data JPA)
-               │ (Entity ↔ DTO)      │          └───────────┬───────────┘
-               └─────────────────────┘                      │
-                                                    ┌────────▼────────┐
-                                                    │   PostgreSQL     │
-                                                    └─────────────────┘
+               │      Mapper          │          │      Repository        │  → Data access (Spring Data JPA)
+               │ (Entity ↔ DTO)        │          └───────────┬───────────┘
+               └───────────────────────┘                      │
+                                                      ┌────────▼────────┐
+                                                      │   PostgreSQL      │
+                                                      └───────────────────┘
 
-        Exceções de negócio (ResourceNotFound, DuplicateResource) são capturadas
-        de forma centralizada pelo GlobalExceptionHandler (pacote `exception`)
+        Business exceptions (ResourceNotFound, DuplicateResource) are handled
+        centrally by GlobalExceptionHandler (`exception` package)
 ```
 
-### Organização dos pacotes
+### Package layout
 
 ```
 src/main/java/br/gov/prefeitura/doacoes
-├── controller     # Endpoints REST (camada de entrada da API)
-├── service        # Interfaces de regra de negócio
-│   └── impl       # Implementações concretas dos services
-├── repository     # Interfaces Spring Data JPA
-├── entity         # Entidades JPA (mapeamento com o banco)
-│   └── enums      # Enumerações de domínio
+├── controller     # REST endpoints (API entry point)
+├── service        # Business rule interfaces
+│   └── impl       # Concrete service implementations
+├── repository     # Spring Data JPA interfaces
+├── entity         # JPA entities (database mapping)
+│   └── enums      # Domain enumerations
 ├── dto
-│   ├── request    # Objetos de entrada, com Bean Validation
-│   └── response   # Objetos de saída
-├── mapper         # Conversão Entity ↔ DTO
-├── config         # Configurações (Swagger, CORS, etc.)
-├── exception      # Exceções customizadas + GlobalExceptionHandler
-└── security       # (reservado para autenticação JWT — V2)
+│   ├── request    # Input objects, with Bean Validation
+│   └── response   # Output objects
+├── mapper         # Entity ↔ DTO conversion
+├── config         # Configuration (Swagger, CORS, etc.)
+├── exception      # Custom exceptions + GlobalExceptionHandler
+└── security       # (reserved for JWT authentication — V2)
 ```
 
-**Por que assim?** Cada camada tem uma única responsabilidade. Controllers nunca falam diretamente com o banco; services nunca conhecem detalhes de HTTP; entidades nunca vazam diretamente para fora da API (sempre via DTO). Isso facilita testes isolados, manutenção e onboarding de novos devs no time.
+**Why this structure?** Every layer has a single responsibility. Controllers never talk directly to the database; services never know HTTP details; entities never leak outside the API (always via DTO). This makes the codebase easier to test in isolation, maintain, and hand off to new team members.
 
 ---
 
-## 🧰 Tecnologias
+## 🧰 Tech stack
 
-| Categoria         | Tecnologia                          |
-|-------------------|--------------------------------------|
-| Linguagem         | Java 21                              |
-| Framework         | Spring Boot 3.3                      |
-| Web               | Spring Web (REST)                    |
-| Persistência      | Spring Data JPA + Hibernate           |
-| Banco de dados    | PostgreSQL 16                        |
-| Validação         | Bean Validation (Jakarta Validation) |
-| Boilerplate       | Lombok                               |
-| Documentação      | Springdoc OpenAPI / Swagger UI       |
-| Testes            | JUnit 5 + Mockito + AssertJ          |
-| Containerização   | Docker + Docker Compose              |
-| Integração contínua | GitHub Actions                     |
+| Category            | Technology                            |
+|---------------------|------------------------------------------|
+| Language             | Java 21                                   |
+| Framework            | Spring Boot 3.3                           |
+| Web                  | Spring Web (REST)                         |
+| Persistence          | Spring Data JPA + Hibernate                |
+| Database             | PostgreSQL 16                             |
+| Validation           | Bean Validation (Jakarta Validation)      |
+| Boilerplate          | Lombok                                     |
+| Documentation        | Springdoc OpenAPI / Swagger UI            |
+| Testing              | JUnit 5 + Mockito + AssertJ                |
+| Containerization     | Docker + Docker Compose                    |
+| Continuous integration | GitHub Actions                          |
 
 ---
 
-## 🚀 Como executar
+## 🚀 Getting started
 
-### Pré-requisitos
-- Java 21+ (para rodar localmente sem Docker)
-- Docker e Docker Compose (recomendado)
+### Prerequisites
+- Java 21+ (to run locally without Docker)
+- Docker and Docker Compose (recommended)
 
-### Opção 1 — Com Docker (recomendado)
+### Option 1 — With Docker (recommended)
 
 ```bash
-git clone https://github.com/sua-prefeitura/doacoes-api.git
-cd doacoes-api
+git clone https://github.com/duanjesus/social-supply-management-api.git
+cd social-supply-management-api
 docker compose up --build
 ```
 
-A API sobe em `http://localhost:8080` e o banco PostgreSQL em `localhost:5432`.
+The API comes up at `http://localhost:8080` and PostgreSQL at `localhost:5432`.
 
-### Opção 2 — Localmente com Maven
+### Option 2 — Locally with Maven
 
 ```bash
-# suba apenas o banco de dados
+# start only the database
 docker compose up -d db
 
-# rode a aplicação
+# run the application
 mvn spring-boot:run
 ```
 
-### Documentação interativa (Swagger)
+### Interactive documentation (Swagger)
 
-Com a aplicação rodando, acesse:
+With the application running, visit:
 
 ```
 http://localhost:8080/swagger-ui.html
 ```
 
-### Rodando os testes
+### Running the tests
 
 ```bash
 mvn test
@@ -143,58 +145,58 @@ mvn test
 
 ## 📡 Endpoints (V1)
 
-### Instituições — `/api/v1/institutions`
+### Institutions — `/api/v1/institutions`
 
-| Método | Rota                        | Descrição                  |
-|--------|------------------------------|-----------------------------|
-| POST   | `/api/v1/institutions`       | Cadastrar instituição       |
-| PUT    | `/api/v1/institutions/{id}`  | Editar instituição          |
-| DELETE | `/api/v1/institutions/{id}`  | Excluir instituição         |
-| GET    | `/api/v1/institutions/{id}`  | Buscar instituição por ID   |
-| GET    | `/api/v1/institutions`       | Listar instituições (paginado) |
+| Method | Route                        | Description                  |
+|--------|------------------------------|-------------------------------|
+| POST   | `/api/v1/institutions`       | Register an institution       |
+| PUT    | `/api/v1/institutions/{id}`  | Update an institution          |
+| DELETE | `/api/v1/institutions/{id}`  | Delete an institution          |
+| GET    | `/api/v1/institutions/{id}`  | Find institution by ID         |
+| GET    | `/api/v1/institutions`       | List institutions (paginated)  |
 
-### Produtos — `/api/v1/products`
+### Products — `/api/v1/products`
 
-| Método | Rota                     | Descrição               |
-|--------|---------------------------|---------------------------|
-| POST   | `/api/v1/products`         | Cadastrar produto         |
-| PUT    | `/api/v1/products/{id}`    | Editar produto            |
-| DELETE | `/api/v1/products/{id}`    | Excluir produto           |
-| GET    | `/api/v1/products/{id}`    | Buscar produto por ID     |
-| GET    | `/api/v1/products`         | Listar produtos (paginado) |
+| Method | Route                    | Description               |
+|--------|--------------------------|-----------------------------|
+| POST   | `/api/v1/products`        | Register a product          |
+| PUT    | `/api/v1/products/{id}`   | Update a product             |
+| DELETE | `/api/v1/products/{id}`   | Delete a product             |
+| GET    | `/api/v1/products/{id}`   | Find product by ID           |
+| GET    | `/api/v1/products`        | List products (paginated)    |
 
-### Doações — `/api/v1/donations`
+### Donations — `/api/v1/donations`
 
-| Método | Rota                       | Descrição            |
-|--------|-----------------------------|------------------------|
-| POST   | `/api/v1/donations`         | Registrar doação       |
-| GET    | `/api/v1/donations/{id}`    | Buscar doação por ID   |
-| GET    | `/api/v1/donations`         | Listar doações (paginado) |
+| Method | Route                      | Description            |
+|--------|-----------------------------|--------------------------|
+| POST   | `/api/v1/donations`         | Register a donation      |
+| GET    | `/api/v1/donations/{id}`    | Find donation by ID      |
+| GET    | `/api/v1/donations`         | List donations (paginated) |
 
-### Distribuições — `/api/v1/distributions`
+### Distributions — `/api/v1/distributions`
 
-| Método | Rota                           | Descrição                 |
-|--------|----------------------------------|-----------------------------|
-| POST   | `/api/v1/distributions`         | Registrar distribuição       |
-| GET    | `/api/v1/distributions/{id}`    | Buscar distribuição por ID   |
-| GET    | `/api/v1/distributions`         | Listar distribuições (paginado) |
+| Method | Route                           | Description                  |
+|--------|-----------------------------------|---------------------------------|
+| POST   | `/api/v1/distributions`         | Register a distribution         |
+| GET    | `/api/v1/distributions/{id}`    | Find distribution by ID          |
+| GET    | `/api/v1/distributions`         | List distributions (paginated)   |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] **V1** — Cadastros base (instituições, produtos), doações e distribuições
-- [ ] **V2** — Autenticação e autorização com JWT (login, perfis ADMIN/OPERADOR)
-- [ ] **V2** — Controle de estoque em tempo real (saldo por produto, alertas de baixa quantidade)
-- [ ] **V3** — Dashboard com indicadores (famílias atendidas, produtos mais doados, instituições mais ativas)
-- [ ] **V3** — Relatórios exportáveis (PDF/Excel) por período e instituição
-- [ ] **V3** — Deploy automatizado (Railway/Render/AWS) via GitHub Actions
+- [x] **V1** — Core registrations (institutions, products), donations and distributions
+- [ ] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
+- [ ] **V2** — Real-time inventory control (stock balance per product, low-quantity alerts)
+- [ ] **V3** — Dashboard with metrics (families served, most-donated products, most active institutions)
+- [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
+- [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 
 ---
 
-## 🌱 Padrão de commits
+## 🌱 Commit convention
 
-Este projeto segue **Conventional Commits**:
+This project follows **Conventional Commits**:
 
 ```
 feat: create institution entity
@@ -206,18 +208,18 @@ test: add unit tests for donation service
 chore: configure github actions workflow
 ```
 
-| Tipo       | Quando usar                                             |
-|------------|----------------------------------------------------------|
-| `feat`     | Nova funcionalidade                                       |
-| `fix`      | Correção de bug                                           |
-| `refactor` | Alteração de código sem mudar comportamento               |
-| `docs`     | Alterações em documentação                                 |
-| `style`    | Formatação, indentação, sem mudança de lógica              |
-| `test`     | Criação ou ajuste de testes                                |
-| `chore`    | Tarefas de manutenção (build, dependências, CI, etc.)      |
+| Type       | When to use                                              |
+|------------|-----------------------------------------------------------|
+| `feat`     | New feature                                                |
+| `fix`      | Bug fix                                                    |
+| `refactor` | Code change without behavior change                        |
+| `docs`     | Documentation changes                                       |
+| `style`    | Formatting, indentation, no logic change                    |
+| `test`     | Adding or adjusting tests                                    |
+| `chore`    | Maintenance tasks (build, dependencies, CI, etc.)           |
 
 ---
 
-## 📄 Licença
+## 📄 License
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+Distributed under the MIT License. See `LICENSE` for more information.

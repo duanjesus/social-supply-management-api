@@ -14,8 +14,8 @@
     <groupId>br.gov.prefeitura</groupId>
     <artifactId>doacoes-api</artifactId>
     <version>1.0.0</version>
-    <name>doacoes-api</name>
-    <description>API de gestão de doações e distribuição de alimentos para instituições</description>
+    <name>social-supply-management-api</name>
+    <description>Backend API for managing institutions, donations, inventory and food distribution for social supply programs</description>
 
     <properties>
         <java.version>21</java.version>
