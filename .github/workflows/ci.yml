@@ -7,9 +7,12 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  build-and-test:
-    name: Build & Test
+  backend:
+    name: Backend – Build & Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
 
     services:
       postgres:
@@ -56,4 +59,29 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: doacoes-api-jar
-          path: target/*.jar
+          path: backend/target/*.jar
+
+  frontend:
+    name: Frontend – Lint & Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build

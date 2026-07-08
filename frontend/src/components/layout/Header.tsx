@@ -1,0 +1,31 @@
+import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+
+export function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate("/login");
+  }
+
+  return (
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+      <div className="md:hidden text-sm font-semibold text-slate-900">Social Supply</div>
+      <div className="ml-auto flex items-center gap-3">
+        <div className="hidden text-right sm:block">
+          <p className="text-sm font-medium text-slate-900">{user?.name}</p>
+          <p className="text-xs text-slate-500">{user?.email}</p>
+        </div>
+        <Badge tone={user?.role === "ADMIN" ? "blue" : "slate"}>{user?.role}</Badge>
+        <Button variant="secondary" onClick={handleLogout}>
+          Sair
+        </Button>
+      </div>
+    </header>
+  );
+}
