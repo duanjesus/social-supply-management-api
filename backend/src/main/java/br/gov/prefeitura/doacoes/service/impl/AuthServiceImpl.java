@@ -4,6 +4,7 @@ import br.gov.prefeitura.doacoes.dto.request.LoginRequestDTO;
 import br.gov.prefeitura.doacoes.dto.request.RegisterRequestDTO;
 import br.gov.prefeitura.doacoes.dto.response.AuthResponseDTO;
 import br.gov.prefeitura.doacoes.entity.User;
+import br.gov.prefeitura.doacoes.entity.enums.UserRole;
 import br.gov.prefeitura.doacoes.exception.DuplicateResourceException;
 import br.gov.prefeitura.doacoes.exception.InvalidCredentialsException;
 import br.gov.prefeitura.doacoes.repository.UserRepository;
@@ -34,11 +35,16 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateResourceException("There is already a user registered with the email: " + dto.email());
         }
 
+        // The role is never taken from client input: the first user to ever
+        // register becomes ADMIN (bootstrap), everyone after that is OPERATOR.
+        // Promotions afterwards go through UserService, restricted to ADMIN.
+        UserRole role = userRepository.count() == 0 ? UserRole.ADMIN : UserRole.OPERATOR;
+
         User user = User.builder()
                 .name(dto.name())
                 .email(dto.email())
                 .password(passwordEncoder.encode(dto.password()))
-                .role(dto.role())
+                .role(role)
                 .active(true)
                 .build();
 

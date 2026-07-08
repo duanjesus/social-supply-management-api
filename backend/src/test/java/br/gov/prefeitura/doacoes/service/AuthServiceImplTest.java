@@ -26,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -53,7 +54,7 @@ class AuthServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        registerRequestDTO = new RegisterRequestDTO("Ana Souza", "ana@example.org", "supersecret123", UserRole.OPERATOR);
+        registerRequestDTO = new RegisterRequestDTO("Ana Souza", "ana@example.org", "supersecret123");
         loginRequestDTO = new LoginRequestDTO("ana@example.org", "supersecret123");
 
         user = User.builder()
@@ -67,9 +68,10 @@ class AuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should register a new user successfully when email does not exist yet")
-    void deveRegistrarUsuarioComSucesso() {
+    @DisplayName("Should register a new user as OPERATOR when other users already exist")
+    void deveRegistrarUsuarioComoOperadorQuandoJaExistemUsuarios() {
         when(userRepository.existsByEmail(registerRequestDTO.email())).thenReturn(false);
+        when(userRepository.count()).thenReturn(1L);
         when(passwordEncoder.encode(registerRequestDTO.password())).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(jwtService.generateToken(any())).thenReturn("fake-jwt-token");
@@ -81,7 +83,32 @@ class AuthServiceImplTest {
         assertThat(response.token()).isEqualTo("fake-jwt-token");
         assertThat(response.email()).isEqualTo("ana@example.org");
         assertThat(response.role()).isEqualTo(UserRole.OPERATOR);
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(1)).save(argThat(saved -> saved.getRole() == UserRole.OPERATOR));
+    }
+
+    @Test
+    @DisplayName("Should register the first user in the system as ADMIN (bootstrap)")
+    void deveRegistrarPrimeiroUsuarioComoAdmin() {
+        User admin = User.builder()
+                .id(1L)
+                .name("Ana Souza")
+                .email("ana@example.org")
+                .password("encoded-password")
+                .role(UserRole.ADMIN)
+                .active(true)
+                .build();
+
+        when(userRepository.existsByEmail(registerRequestDTO.email())).thenReturn(false);
+        when(userRepository.count()).thenReturn(0L);
+        when(passwordEncoder.encode(registerRequestDTO.password())).thenReturn("encoded-password");
+        when(userRepository.save(any(User.class))).thenReturn(admin);
+        when(jwtService.generateToken(any())).thenReturn("fake-jwt-token");
+        when(jwtService.getExpirationMs()).thenReturn(86_400_000L);
+
+        AuthResponseDTO response = authService.register(registerRequestDTO);
+
+        assertThat(response.role()).isEqualTo(UserRole.ADMIN);
+        verify(userRepository, times(1)).save(argThat(saved -> saved.getRole() == UserRole.ADMIN));
     }
 
     @Test

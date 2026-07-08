@@ -136,15 +136,17 @@ Every endpoint below (except `/api/v1/auth/**` and Swagger itself) requires a va
 
 | Method | Route                    | Description                          |
 |--------|--------------------------|-----------------------------------------|
-| POST   | `/api/v1/auth/register`  | Register a new user (ADMIN or OPERATOR) |
+| POST   | `/api/v1/auth/register`  | Self-register a new user                |
 | POST   | `/api/v1/auth/login`     | Authenticate and receive a JWT token    |
+
+**`/auth/register` never accepts a client-supplied role** — that would let anyone register themselves as ADMIN. Instead: the **first user ever created becomes ADMIN automatically** (bootstrap), and every registration after that is forced to `OPERATOR`, no matter what the request body contains. To promote someone to ADMIN later, an existing ADMIN must call `PATCH /api/v1/users/{id}/role` (see the Users section below).
 
 **Register:**
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"name": "Ana Souza", "email": "ana@example.org", "password": "supersecret123", "role": "ADMIN"}'
+  -d '{"name": "Ana Souza", "email": "ana@example.org", "password": "supersecret123"}'
 ```
 
 **Login:**
@@ -163,6 +165,22 @@ curl http://localhost:8080/api/v1/institutions \
 ```
 
 In Swagger UI, click the **Authorize** button (top right) and paste the token to have it applied automatically to every "Try it out" call.
+
+### Users — `/api/v1/users`
+
+Restricted to `ADMIN`. This is how you promote an OPERATOR (or demote an ADMIN) after the initial bootstrap. An ADMIN cannot change their own role (guards against accidental lockout).
+
+| Method | Route                       | Description                        |
+|--------|------------------------------|-------------------------------------|
+| GET    | `/api/v1/users`              | List users (paginated, ADMIN only)  |
+| PATCH  | `/api/v1/users/{id}/role`    | Change a user's role (ADMIN only)   |
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/users/2/role \
+  -H "Authorization: Bearer {admin-token}" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "ADMIN"}'
+```
 
 ### Institutions — `/api/v1/institutions`
 

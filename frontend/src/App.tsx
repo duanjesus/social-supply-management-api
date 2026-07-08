@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
@@ -9,6 +10,7 @@ import { InstitutionsListPage } from "@/pages/institutions/InstitutionsListPage"
 import { ProductsListPage } from "@/pages/products/ProductsListPage";
 import { DonationsListPage } from "@/pages/donations/DonationsListPage";
 import { DistributionsListPage } from "@/pages/distributions/DistributionsListPage";
+import { UsersListPage } from "@/pages/users/UsersListPage";
 
 export default function App() {
   return (
@@ -23,6 +25,9 @@ export default function App() {
           <Route path="/products" element={<ProductsListPage />} />
           <Route path="/donations" element={<DonationsListPage />} />
           <Route path="/distributions" element={<DistributionsListPage />} />
+          <Route element={<AdminRoute />}>
+            <Route path="/users" element={<UsersListPage />} />
+          </Route>
         </Route>
       </Route>
 

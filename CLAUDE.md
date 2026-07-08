@@ -18,25 +18,14 @@ Each package has its own `README.md` with full details — [backend/README.md](b
 
 ## Running things
 
-No Node.js/npm is installed in some environments used to develop this repo — frontend changes here were written by hand and have **not** been verified with `npm install` / `tsc` / `vite build`. Before trusting a frontend change, actually run:
-
 ```bash
-cd frontend
-npm install
-npm run lint
-npm run build
+cd frontend && npm ci && npm run lint && npm run build   # or: npm run dev
+cd backend && mvn -B clean test                            # or: mvn spring-boot:run
 ```
 
-Backend:
+`frontend/package-lock.json` is committed — CI uses `npm ci` with the lockfile cached. If you add/bump a dependency, run `npm install` locally and commit the updated lockfile.
 
-```bash
-cd backend
-mvn -B clean test
-```
-
-No `frontend/package-lock.json` is committed yet (it couldn't be generated in the environment this scaffold was written in, since Node wasn't installed there). The first `npm install` will create it — commit that lockfile, then switch `npm install` → `npm ci` and re-enable `cache: 'npm'` in `.github/workflows/ci.yml` for faster, reproducible builds.
-
-Full stack via Docker (from repo root): `docker compose up --build` — frontend at `:3000`, API at `:8080`, Swagger at `:8080/swagger-ui.html`.
+Full stack via Docker (from repo root): `docker compose up --build` — frontend at `:3000`, API at `:8080`, Swagger at `:8080/swagger-ui.html`. Note both `docker-compose.yml` here and any other clone of this repo use the same hardcoded `container_name`s (`doacoes-db`, `doacoes-api`) — running two checkouts' stacks at once will collide; stop one or rename containers first.
 
 ## The contract between frontend and backend
 
@@ -56,7 +45,9 @@ Domain enums as of this writing — check the Java source before relying on this
 - `ProductCategory`: `ALIMENTO`, `HIGIENE`, `LIMPEZA`, `VESTUARIO`, `OUTROS`
 - `ProductUnit`: `KG`, `LITRO`, `UNIDADE`, `CAIXA`, `PACOTE`
 
-API base path: `/api/v1`. All routes require a JWT (`Authorization: Bearer <token>`) except `/api/v1/auth/**` and Swagger. `DELETE /institutions/{id}` and `DELETE /products/{id}` additionally require the `ADMIN` role (`@PreAuthorize("hasRole('ADMIN')")`) — the frontend hides those buttons for `OPERATOR` users via `useAuth().isAdmin`, but that's a UX nicety, not the security boundary; the backend enforces it.
+API base path: `/api/v1`. All routes require a JWT (`Authorization: Bearer <token>`) except `/api/v1/auth/**` and Swagger. `DELETE /institutions/{id}`, `DELETE /products/{id}`, and everything under `/users` additionally require the `ADMIN` role (`@PreAuthorize("hasRole('ADMIN')")`) — the frontend hides those buttons/routes for `OPERATOR` users via `useAuth().isAdmin` and `<AdminRoute>`, but that's a UX nicety, not the security boundary; the backend enforces it.
+
+**`RegisterRequestDTO` has no `role` field on purpose.** A client-supplied role on public self-registration would let anyone become ADMIN — this was a real hole in an earlier version of this app, closed in `AuthServiceImpl.register()`: the first user ever created becomes ADMIN (bootstrap), everyone after that is forced to `OPERATOR` regardless of what's sent. Promoting/demoting a user afterwards requires an existing ADMIN, via `PATCH /api/v1/users/{id}/role` (`UserController` → `UserServiceImpl.updateRole`), which also refuses to let an ADMIN change their own role (`BusinessException`, avoids accidental lockout). If you ever touch registration or role assignment again, preserve this: **never trust a role coming from an unauthenticated request.**
 
 Donations and distributions are **append-only** in the backend (only `POST`, `GET /{id}`, `GET` list exist — no update/delete endpoints), so their frontend pages intentionally have no edit/delete UI. Don't add one without adding the backend endpoint first.
 
@@ -71,11 +62,12 @@ Donations and distributions are **append-only** in the backend (only `POST`, `GE
 
 ## Frontend conventions (`frontend/`)
 
-- Vite + React 18 + TypeScript, path alias `@/*` → `frontend/src/*` (both `tsconfig.app.json` and `vite.config.ts`).
+- Vite + React 18 + TypeScript, path alias `@/*` → `frontend/src/*` (both `tsconfig.json` and `vite.config.ts`). `tsconfig.node.json` covers `vite.config.ts` itself (editor-only, not part of the `npm run build` type-check, deliberately not wired via TS project references — kept simple since composite/references add failure modes that are hard to verify without running `tsc`).
 - Server state (all API data) goes through **TanStack Query** hooks in `src/hooks/` — one file per resource, exporting query hooks (`useInstitutions`, `useAllProducts`, ...) and mutation hooks (`useCreateProduct`, ...). Don't call `api` directly from a page component; add/extend a hook instead.
 - Forms use **React Hook Form + Zod**, with a Zod schema colocated in the `*FormModal.tsx` file, deliberately mirroring the backend's Bean Validation constraints (same max lengths, same required fields). If the backend validation changes, update the schema.
 - `src/lib/api.ts` holds the single Axios instance: request interceptor attaches the JWT from `localStorage`, response interceptor clears the session and redirects to `/login` on 401. `extractErrorMessage(error)` turns a backend `ErrorResponse` into a user-facing string — use it in every mutation's `catch`.
-- Auth/session state lives in `src/context/AuthContext.tsx` (`useAuth()` gives `user`, `isAuthenticated`, `isAdmin`, `login`, `register`, `logout`). `register` logs the user in immediately (matches backend behavior: `/auth/register` returns a token).
+- Auth/session state lives in `src/context/AuthContext.tsx` (`useAuth()` gives `user`, `isAuthenticated`, `isAdmin`, `login`, `register`, `logout`). `register` logs the user in immediately (matches backend behavior: `/auth/register` returns a token). The register form has no role field — see the security note above.
+- `<ProtectedRoute>` (must be logged in) and `<AdminRoute>` (must be `isAdmin`, else redirects to `/`) are route-wrapper components in `src/components/`, composed in `App.tsx`. `/users` is wrapped in both. Follow this pattern for any future admin-only page.
 - Reusable primitives live in `src/components/ui/` (`Button`, `Input`, `Select`, `Textarea`, `Modal`, `Pagination`, `Badge`, `Spinner`, `EmptyState`, `ErrorBanner`) — prefer these over ad-hoc markup when building new pages.
 - Page structure per resource: `src/pages/<resource>/<Resource>ListPage.tsx` (table + pagination) and `<Resource>FormModal.tsx` (create/edit form in a modal). Follow this pattern for any new resource.
 - Styling is Tailwind utility classes only — no CSS modules/styled-components. The `brand` color scale is defined in `tailwind.config.js`.

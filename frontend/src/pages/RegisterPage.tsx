@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext";
 import { extractErrorMessage } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 
 const schema = z.object({
@@ -18,7 +17,6 @@ const schema = z.object({
     .string()
     .min(8, "A senha deve ter entre 8 e 100 caracteres")
     .max(100, "A senha deve ter entre 8 e 100 caracteres"),
-  role: z.enum(["ADMIN", "OPERATOR"]),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -32,10 +30,7 @@ export function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { role: "OPERATOR" },
-  });
+  } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
@@ -75,10 +70,11 @@ export function RegisterPage() {
             error={errors.password?.message}
             {...register("password")}
           />
-          <Select label="Papel" error={errors.role?.message} {...register("role")}>
-            <option value="OPERATOR">Operador</option>
-            <option value="ADMIN">Administrador</option>
-          </Select>
+          <p className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            Sua conta é criada como <strong>Operador</strong>. Se você for a primeira pessoa a se
+            cadastrar no sistema, torna-se <strong>Administrador</strong> automaticamente. Depois
+            disso, peça a um Administrador para promover sua conta caso precise de mais acesso.
+          </p>
           <Button type="submit" isLoading={isSubmitting} className="mt-2 w-full">
             Criar conta
           </Button>

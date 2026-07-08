@@ -1,14 +1,20 @@
 import { NavLink } from "react-router-dom";
 
-const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
+import { useAuth } from "@/context/AuthContext";
+
+const NAV_ITEMS: { to: string; label: string; end?: boolean; adminOnly?: boolean }[] = [
   { to: "/", label: "Visão geral", end: true },
   { to: "/institutions", label: "Instituições" },
   { to: "/products", label: "Produtos" },
   { to: "/donations", label: "Doações" },
   { to: "/distributions", label: "Distribuições" },
+  { to: "/users", label: "Usuários", adminOnly: true },
 ];
 
 export function Sidebar() {
+  const { isAdmin } = useAuth();
+  const items = NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+
   return (
     <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white md:block">
       <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-5">
@@ -18,7 +24,7 @@ export function Sidebar() {
         <span className="text-sm font-semibold text-slate-900">Social Supply</span>
       </div>
       <nav className="flex flex-col gap-1 p-3">
-        {NAV_ITEMS.map((item) => (
+        {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
