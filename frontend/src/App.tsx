@@ -11,6 +11,7 @@ import { ProductsListPage } from "@/pages/products/ProductsListPage";
 import { DonationsListPage } from "@/pages/donations/DonationsListPage";
 import { DistributionsListPage } from "@/pages/distributions/DistributionsListPage";
 import { UsersListPage } from "@/pages/users/UsersListPage";
+import { ReportsPage } from "@/pages/ReportsPage";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/products" element={<ProductsListPage />} />
           <Route path="/donations" element={<DonationsListPage />} />
           <Route path="/distributions" element={<DistributionsListPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
           <Route element={<AdminRoute />}>
             <Route path="/users" element={<UsersListPage />} />
           </Route>

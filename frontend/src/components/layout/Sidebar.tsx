@@ -8,6 +8,7 @@ const NAV_ITEMS: { to: string; label: string; end?: boolean; adminOnly?: boolean
   { to: "/products", label: "Produtos" },
   { to: "/donations", label: "Doações" },
   { to: "/distributions", label: "Distribuições" },
+  { to: "/reports", label: "📊 Relatórios" },
   { to: "/users", label: "Usuários", adminOnly: true },
 ];
 

@@ -3,10 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Page } from "@/types/common";
 import { useAuth } from "@/context/AuthContext";
-import { useDonations } from "@/hooks/useDonations";
+import { useDonations, useAllDonations } from "@/hooks/useDonations";
 import { useDistributions } from "@/hooks/useDistributions";
+import { useAllInstitutions } from "@/hooks/useInstitutions";
 import { Spinner } from "@/components/ui/Spinner";
-import { formatDate, formatQuantity } from "@/utils/format";
+import { formatCount, formatDate, formatQuantity, isInCurrentMonth } from "@/utils/format";
 
 function useCount(resource: string) {
   return useQuery({
@@ -20,13 +21,27 @@ function useCount(resource: string) {
   });
 }
 
-function StatCard({ label, value, isLoading }: { label: string; value?: number; isLoading: boolean }) {
+interface StatRowProps {
+  icon: string;
+  label: string;
+  value?: number;
+  isLoading: boolean;
+}
+
+function StatRow({ icon, label, value, isLoading }: StatRowProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <div className="mt-2 text-2xl font-semibold text-slate-900">
-        {isLoading ? <Spinner className="h-5 w-5" /> : (value ?? 0)}
-      </div>
+    <div className="flex items-center justify-between px-5 py-4">
+      <span className="flex items-center gap-3 text-sm font-medium text-slate-600">
+        <span className="text-lg" aria-hidden="true">
+          {icon}
+        </span>
+        {label}
+      </span>
+      {isLoading ? (
+        <Spinner className="h-5 w-5" />
+      ) : (
+        <span className="text-2xl font-bold tabular-nums text-slate-900">{formatCount(value ?? 0)}</span>
+      )}
     </div>
   );
 }
@@ -35,8 +50,17 @@ export function DashboardPage() {
   const { user } = useAuth();
   const institutions = useCount("institutions");
   const products = useCount("products");
-  const donations = useCount("donations");
   const distributions = useCount("distributions");
+  const allInstitutions = useAllInstitutions();
+  const allDonations = useAllDonations();
+
+  const familiesServed = allInstitutions.data?.reduce(
+    (sum, institution) => sum + (institution.familiesServed ?? 0),
+    0,
+  );
+  const donationsThisMonth = allDonations.data?.filter((donation) =>
+    isInCurrentMonth(donation.donationDate),
+  ).length;
 
   const recentDonations = useDonations(0, 5);
   const recentDistributions = useDistributions(0, 5);
@@ -48,11 +72,39 @@ export function DashboardPage() {
         <p className="text-sm text-slate-500">Visão geral do programa de suprimentos sociais.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Instituições" value={institutions.data} isLoading={institutions.isLoading} />
-        <StatCard label="Produtos" value={products.data} isLoading={products.isLoading} />
-        <StatCard label="Doações" value={donations.data} isLoading={donations.isLoading} />
-        <StatCard label="Distribuições" value={distributions.data} isLoading={distributions.isLoading} />
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="divide-y divide-slate-100">
+          <StatRow
+            icon="🏢"
+            label="Instituições cadastradas"
+            value={institutions.data}
+            isLoading={institutions.isLoading}
+          />
+          <StatRow
+            icon="👨‍👩‍👧"
+            label="Famílias atendidas"
+            value={familiesServed}
+            isLoading={allInstitutions.isLoading}
+          />
+          <StatRow
+            icon="📦"
+            label="Produtos cadastrados"
+            value={products.data}
+            isLoading={products.isLoading}
+          />
+          <StatRow
+            icon="❤️"
+            label="Doações este mês"
+            value={donationsThisMonth}
+            isLoading={allDonations.isLoading}
+          />
+          <StatRow
+            icon="🚚"
+            label="Distribuições realizadas"
+            value={distributions.data}
+            isLoading={distributions.isLoading}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

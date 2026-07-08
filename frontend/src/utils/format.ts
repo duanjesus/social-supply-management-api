@@ -11,3 +11,12 @@ export function formatQuantity(quantity: number): string {
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+export function formatCount(value: number): string {
+  return new Intl.NumberFormat("pt-BR").format(value);
+}
+
+export function isInCurrentMonth(isoDate: string): boolean {
+  const currentPrefix = todayIsoDate().slice(0, 7);
+  return isoDate.startsWith(currentPrefix);
+}
