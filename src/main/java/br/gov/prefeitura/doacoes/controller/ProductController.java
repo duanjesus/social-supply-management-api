@@ -40,6 +40,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir produto")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         productService.delete(id);

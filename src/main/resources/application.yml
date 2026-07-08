@@ -38,3 +38,7 @@ logging:
   level:
     br.gov.prefeitura.doacoes: INFO
     org.hibernate.SQL: WARN
+
+jwt:
+  secret: ${JWT_SECRET:c29jaWFsLXN1cHBseS1tYW5hZ2VtZW50LWFwaS1zdXBlci1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9u}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}

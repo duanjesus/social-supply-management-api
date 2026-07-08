@@ -40,6 +40,7 @@ public class InstitutionController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir instituição")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         institutionService.delete(id);
