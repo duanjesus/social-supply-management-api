@@ -235,7 +235,7 @@ Registering a distribution subtracts its `quantity` from the distributed product
 - [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
 - [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts, top donated products, most-attended institutions, 6-month trend)
 - [x] **V3** — Exportable reports (PDF/CSV) by period and institution
-- [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
+- [x] **V3** — Automated deployment (AWS EC2 via Terraform) with CI-gated GitHub Actions CD
 
 ---
 

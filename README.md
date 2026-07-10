@@ -87,11 +87,18 @@ social-supply-management-api/
 │   ├── Dockerfile
 │   └── README.md
 ├── docker-compose.yml  # Orchestrates db + api + web together
-├── .github/workflows/  # CI: backend build/test, frontend lint/build
+├── infra/aws/          # Terraform: EC2 + networking for the live deployment
+├── .github/workflows/  # CI (build/test/lint) + CD (deploy to EC2 on main)
 └── CLAUDE.md           # Guide for AI coding agents working in this repo
 ```
 
 Each package is independently runnable and documented — see their READMEs for tech stack details, available scripts, and architecture notes.
+
+---
+
+## ☁️ Deployment
+
+`infra/` holds the Terraform for a live deployment: a single EC2 instance running this repo's own `docker-compose.yml`, with `.github/workflows/deploy.yml` redeploying automatically on every successful CI run on `main`. See [infra/aws/README.md](infra/aws/README.md) for what it provisions, how to run it yourself, and its deliberate limitations (no HTTPS, no managed DB — appropriate for this project's scale, not a template for a larger one).
 
 ---
 
@@ -103,7 +110,7 @@ Each package is independently runnable and documented — see their READMEs for 
 - [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
 - [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts, top donated products, most-attended institutions, 6-month trend)
 - [x] **V3** — Exportable reports (PDF/CSV) by period and institution
-- [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
+- [x] **V3** — Automated deployment (AWS EC2 via Terraform) with CI-gated GitHub Actions CD
 
 ---
 
