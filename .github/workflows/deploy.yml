@@ -14,14 +14,19 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Deploy via SSH (git pull + docker compose up --build -d)
+      - name: Deploy via SSH (reset to origin/main + docker compose up --build -d)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -euxo pipefail
             cd /opt/app
-            git pull --ff-only
+            # The server should always mirror origin/main exactly — reset
+            # rather than pull, so a stray local edit (manual hotfix, etc.)
+            # never blocks a deploy the way a fast-forward-only pull would.
+            git fetch origin
+            git reset --hard origin/main
             docker compose up --build -d
             docker image prune -f
