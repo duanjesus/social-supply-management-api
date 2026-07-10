@@ -31,6 +31,26 @@ This repository is a **monorepo** containing both halves of the system:
 
 ---
 
+## 📸 Screenshots
+
+<p align="center"><img src="docs/screenshots/dashboard.png" alt="Dashboard — stats, low-stock alert, 6-month trend, top products/institutions, recent activity" width="850"></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/login.png" alt="Login page"><br><sub align="center">Login</sub></td>
+<td width="50%"><img src="docs/screenshots/institutions.png" alt="Institutions list"><br><sub align="center">Institutions</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/products.png" alt="Products list with stock and low-stock badge"><br><sub align="center">Products — live stock balance</sub></td>
+<td width="50%"><img src="docs/screenshots/distributions.png" alt="Distributions list"><br><sub align="center">Distributions</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/reports.png" alt="Reports page with a generated report"><br><sub align="center">Reports — filter by period/institution, export to PDF/CSV</sub></td>
+</tr>
+</table>
+
+---
+
 ## 🚀 Quick start (full stack, with Docker)
 
 ```bash
