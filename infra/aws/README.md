@@ -42,6 +42,19 @@ cd /opt/app && git pull && docker compose up --build -d
 - **SSH is open to `0.0.0.0/0`.** GitHub Actions runners don't have a fixed IP, so the security group can't be scoped to just them. Mitigated by key-only auth (no password login on the AMI). Tighten with AWS SSM Session Manager or a bastion if that trade-off doesn't sit right for your use case.
 - **Single instance, no auto-scaling/self-healing beyond `restart: unless-stopped`.** If the instance itself dies, someone needs to notice and re-run `terraform apply`.
 
+## If the API can't authenticate to Postgres ("password authentication failed")
+
+Postgres's `POSTGRES_PASSWORD` only takes effect the **first** time it initializes an empty data directory — if the `doacoes-db-data` volume already exists (e.g. it was created by an earlier `.env`, or during troubleshooting), a later change to `DB_PASSWORD` in `.env` updates what the `api` container *sends*, not what's actually stored in Postgres, and auth fails. Since this deployment has no real user data worth preserving before you've started using it for real, the fix is to wipe and let it reinitialize against the current `.env`:
+
+```bash
+cd /opt/app
+sudo docker compose down
+sudo docker volume rm app_doacoes-db-data
+sudo docker compose up -d
+```
+
+If there's real data you need to keep, change the password inside Postgres instead (`ALTER USER doacoes_user WITH PASSWORD '...'` via `docker exec -it doacoes-db psql -U doacoes_user -d doacoes_db`) rather than wiping the volume.
+
 ## Tearing down
 
 ```bash
