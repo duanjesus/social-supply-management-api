@@ -10,10 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/distributions")
@@ -37,9 +39,14 @@ public class DistributionController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar distribuições")
-    public ResponseEntity<Page<DistributionResponseDTO>> findAll(@PageableDefault(size = 20, sort = "distributionDate") Pageable pageable) {
-        return ResponseEntity.ok(distributionService.findAll(pageable));
+    @Operation(summary = "Listar distribuições",
+            description = "Filtros opcionais startDate/endDate (yyyy-MM-dd) e institutionId")
+    public ResponseEntity<Page<DistributionResponseDTO>> findAll(
+            @PageableDefault(size = 20, sort = "distributionDate") Pageable pageable,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Long institutionId) {
+        return ResponseEntity.ok(distributionService.findAll(pageable, startDate, endDate, institutionId));
     }
 
 }

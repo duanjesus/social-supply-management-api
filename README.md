@@ -102,7 +102,7 @@ Each package is independently runnable and documented — see their READMEs for 
 - [x] **V2** — React frontend consuming the API, monorepo structure
 - [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
 - [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts, top donated products, most-attended institutions, 6-month trend)
-- [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
+- [x] **V3** — Exportable reports (PDF/CSV) by period and institution
 - [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 
 ---

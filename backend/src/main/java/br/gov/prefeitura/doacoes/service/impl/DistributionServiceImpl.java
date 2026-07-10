@@ -12,11 +12,17 @@ import br.gov.prefeitura.doacoes.repository.DistributionRepository;
 import br.gov.prefeitura.doacoes.repository.InstitutionRepository;
 import br.gov.prefeitura.doacoes.repository.ProductRepository;
 import br.gov.prefeitura.doacoes.service.DistributionService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -69,8 +75,23 @@ public class DistributionServiceImpl implements DistributionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DistributionResponseDTO> findAll(Pageable pageable) {
-        return distributionRepository.findAll(pageable)
+    public Page<DistributionResponseDTO> findAll(Pageable pageable, LocalDate startDate, LocalDate endDate,
+                                                  Long institutionId) {
+        Specification<Distribution> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("distributionDate"), startDate));
+            }
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("distributionDate"), endDate));
+            }
+            if (institutionId != null) {
+                predicates.add(cb.equal(root.get("institution").get("id"), institutionId));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return distributionRepository.findAll(spec, pageable)
                 .map(distributionMapper::toResponseDto);
     }
 

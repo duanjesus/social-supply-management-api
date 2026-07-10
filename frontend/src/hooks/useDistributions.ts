@@ -35,6 +35,24 @@ export function useAllDistributions() {
   });
 }
 
+export interface DistributionReportFilters {
+  startDate?: string;
+  endDate?: string;
+  institutionId?: number;
+}
+
+/** On-demand, server-filtered fetch for the Reports page — see useDonationsReport. */
+export function useDistributionsReport() {
+  return useMutation({
+    mutationFn: async (filters: DistributionReportFilters) => {
+      const { data } = await api.get<Page<Distribution>>("/distributions", {
+        params: { page: 0, size: 2000, sort: "distributionDate", ...filters },
+      });
+      return data.content;
+    },
+  });
+}
+
 export function useCreateDistribution() {
   const queryClient = useQueryClient();
   return useMutation({

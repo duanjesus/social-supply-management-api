@@ -9,11 +9,17 @@ import br.gov.prefeitura.doacoes.mapper.DonationMapper;
 import br.gov.prefeitura.doacoes.repository.DonationRepository;
 import br.gov.prefeitura.doacoes.repository.ProductRepository;
 import br.gov.prefeitura.doacoes.service.DonationService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,8 +62,19 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DonationResponseDTO> findAll(Pageable pageable) {
-        return donationRepository.findAll(pageable)
+    public Page<DonationResponseDTO> findAll(Pageable pageable, LocalDate startDate, LocalDate endDate) {
+        Specification<Donation> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (startDate != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("donationDate"), startDate));
+            }
+            if (endDate != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("donationDate"), endDate));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return donationRepository.findAll(spec, pageable)
                 .map(donationMapper::toResponseDto);
     }
 

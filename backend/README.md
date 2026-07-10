@@ -207,23 +207,23 @@ Each product carries a **stock balance** (`currentStock`) that the API maintains
 
 ### Donations — `/api/v1/donations`
 
-Registering a donation adds its `quantity` to the donated product's `currentStock`.
+Registering a donation adds its `quantity` to the donated product's `currentStock`. `GET /donations` accepts optional `startDate`/`endDate` (`yyyy-MM-dd`) query params to filter by `donationDate`, used by the frontend's Reports page.
 
 | Method | Route                      | Description            |
 |--------|-----------------------------|--------------------------|
 | POST   | `/api/v1/donations`         | Register a donation      |
 | GET    | `/api/v1/donations/{id}`    | Find donation by ID      |
-| GET    | `/api/v1/donations`         | List donations (paginated) |
+| GET    | `/api/v1/donations`         | List donations (paginated, optional `startDate`/`endDate`) |
 
 ### Distributions — `/api/v1/distributions`
 
-Registering a distribution subtracts its `quantity` from the distributed product's `currentStock`. If the product doesn't have enough stock, the request fails with `422 Unprocessable Entity` and no distribution is created.
+Registering a distribution subtracts its `quantity` from the distributed product's `currentStock`. If the product doesn't have enough stock, the request fails with `422 Unprocessable Entity` and no distribution is created. `GET /distributions` accepts the same optional `startDate`/`endDate` as donations, plus an optional `institutionId`.
 
 | Method | Route                           | Description                  |
 |--------|-----------------------------------|---------------------------------|
 | POST   | `/api/v1/distributions`         | Register a distribution (fails if stock is insufficient) |
 | GET    | `/api/v1/distributions/{id}`    | Find distribution by ID          |
-| GET    | `/api/v1/distributions`         | List distributions (paginated)   |
+| GET    | `/api/v1/distributions`         | List distributions (paginated, optional `startDate`/`endDate`/`institutionId`) |
 
 ---
 
@@ -234,7 +234,7 @@ Registering a distribution subtracts its `quantity` from the distributed product
 - [x] **V2** — React frontend consuming the API (see [../frontend](../frontend))
 - [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
 - [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts, top donated products, most-attended institutions, 6-month trend)
-- [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
+- [x] **V3** — Exportable reports (PDF/CSV) by period and institution
 - [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 
 ---

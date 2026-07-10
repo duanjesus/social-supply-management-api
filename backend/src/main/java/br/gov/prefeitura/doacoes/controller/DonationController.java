@@ -10,10 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/v1/donations")
@@ -37,9 +39,12 @@ public class DonationController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar doações")
-    public ResponseEntity<Page<DonationResponseDTO>> findAll(@PageableDefault(size = 20, sort = "donationDate") Pageable pageable) {
-        return ResponseEntity.ok(donationService.findAll(pageable));
+    @Operation(summary = "Listar doações", description = "Filtros opcionais startDate/endDate (yyyy-MM-dd) por período")
+    public ResponseEntity<Page<DonationResponseDTO>> findAll(
+            @PageableDefault(size = 20, sort = "donationDate") Pageable pageable,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return ResponseEntity.ok(donationService.findAll(pageable, startDate, endDate));
     }
 
 }

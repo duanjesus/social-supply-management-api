@@ -36,6 +36,25 @@ export function useAllDonations() {
   });
 }
 
+export interface ReportDateFilters {
+  startDate?: string;
+  endDate?: string;
+}
+
+/** On-demand, server-filtered fetch for the Reports page — unlike useAllDonations
+ * this hits the backend's startDate/endDate query params, so it's not capped by
+ * client-side aggregation limits. Call `.mutate(filters)` to (re)generate. */
+export function useDonationsReport() {
+  return useMutation({
+    mutationFn: async (filters: ReportDateFilters) => {
+      const { data } = await api.get<Page<Donation>>("/donations", {
+        params: { page: 0, size: 2000, sort: "donationDate", ...filters },
+      });
+      return data.content;
+    },
+  });
+}
+
 export function useCreateDonation() {
   const queryClient = useQueryClient();
   return useMutation({
