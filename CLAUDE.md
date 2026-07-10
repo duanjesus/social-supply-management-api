@@ -51,12 +51,15 @@ API base path: `/api/v1`. All routes require a JWT (`Authorization: Bearer <toke
 
 Donations and distributions are **append-only** in the backend (only `POST`, `GET /{id}`, `GET` list exist — no update/delete endpoints), so their frontend pages intentionally have no edit/delete UI. Don't add one without adding the backend endpoint first.
 
+**Product stock (`currentStock`) is a derived, server-owned value — never accept it from a request.** `ProductRequestDTO` only carries `minimumStock` (the alert threshold); `currentStock` always starts at `BigDecimal.ZERO` and is only ever mutated by `DonationServiceImpl.register()` (+= quantity) and `DistributionServiceImpl.register()` (-= quantity, after checking `currentStock >= quantity` and throwing `BusinessException` — 422 — if not). If you add another way to move stock (returns, adjustments, corrections), route it through the same pattern: validate against `currentStock` before mutating, mutate inside the same transaction as the record that caused it. `GET /products/low-stock` (`ProductRepository.findLowStock()`) returns products where `minimumStock IS NOT NULL AND currentStock <= minimumStock` — the frontend dashboard and Products page both read `lowStock` off `ProductResponseDTO` rather than recomputing the comparison client-side.
+
 ## Backend conventions (`backend/`)
 
 - Layered architecture: `controller` → `service` (+ `service/impl`) → `repository`, with `mapper` for entity↔DTO conversion. Controllers never touch repositories directly; entities never leave the service layer (always mapped to a DTO).
 - Request DTOs are Java `record`s with Bean Validation annotations (`@NotBlank`, `@Size`, etc.) — validation messages are what `GlobalExceptionHandler` surfaces to the client field-by-field.
 - Custom exceptions (`ResourceNotFoundException`, `DuplicateResourceException`, `BusinessException`, `InvalidCredentialsException`) map to specific HTTP statuses in `GlobalExceptionHandler` — throw the right one rather than a generic exception.
 - JWT is HS256, secret and expiration come from `jwt.secret` / `jwt.expiration-ms` (env `JWT_SECRET` / `JWT_EXPIRATION_MS`), see `security/JwtService.java`.
+- Schema is `ddl-auto: update` (no Flyway/Liquibase) — when adding a `nullable = false` column to an entity that may already have rows (any non-trivial deployment), give it a `columnDefinition` with a `default` (see `Product.currentStock`) so Postgres can backfill existing rows instead of failing the `ALTER TABLE`.
 - Tests live in `backend/src/test`, using JUnit 5 + Mockito + AssertJ, one test class per service impl.
 - Commit convention: Conventional Commits (`feat`, `fix`, `refactor`, `docs`, `style`, `test`, `chore`) — see backend README for the full table.
 
@@ -71,11 +74,12 @@ Donations and distributions are **append-only** in the backend (only `POST`, `GE
 - Reusable primitives live in `src/components/ui/` (`Button`, `Input`, `Select`, `Textarea`, `Modal`, `Pagination`, `Badge`, `Spinner`, `EmptyState`, `ErrorBanner`) — prefer these over ad-hoc markup when building new pages.
 - Page structure per resource: `src/pages/<resource>/<Resource>ListPage.tsx` (table + pagination) and `<Resource>FormModal.tsx` (create/edit form in a modal). Follow this pattern for any new resource.
 - Styling is Tailwind utility classes only — no CSS modules/styled-components. The `brand` color scale is defined in `tailwind.config.js`.
+- Text inputs that map to a Bean Validation-constrained field get, where it makes sense: an example `placeholder`, an `onKeyDown` guard from `src/utils/inputGuards.ts` (`blockDigits` for name-like fields, `blockLetters` for numeric/document fields — these `preventDefault()` the keystroke, they don't just clean up after), and for CNPJ/phone/CPF specifically, live formatting via `register(name, { onChange })` mutating `e.target.value` using a formatter from `src/utils/mask.ts` (`formatCnpj`, `formatPhone`, `formatCpfCnpj`). Follow this pattern for any new "documento"/phone/name field rather than inventing a new one.
 - In dev, Vite proxies `/api/*` to `http://localhost:8080` (`vite.config.ts`); in the Docker image, nginx does the same (`frontend/nginx.conf`) — so the frontend always calls a relative `/api/v1` and never hardcodes a host.
 
 ## Things to watch for
 
-- Money/quantity fields are `BigDecimal` on the backend (`quantity` on donations/distributions) — the frontend treats them as plain `number`, which is fine for the quantities in this domain but don't extend that assumption to actual currency without reconsidering precision.
+- Money/quantity fields are `BigDecimal` on the backend (`quantity` on donations/distributions, `currentStock`/`minimumStock` on products) — the frontend treats them as plain `number`, which is fine for the quantities in this domain but don't extend that assumption to actual currency without reconsidering precision.
 - Dates are ISO `yyyy-MM-dd` strings end-to-end (`LocalDate` on the backend); `formatDate`/`todayIsoDate` in `frontend/src/utils/format.ts` handle display/defaults — don't introduce a different date library or format.
 - `familiesServed` on institutions and other optional numeric fields are sent as `undefined` (omitted) rather than `null` when empty, matching what Jackson's `non_null` inclusion setting expects.
 - CORS is wide open (`allowedOriginPatterns("*")` in `backend/.../config/WebConfig.java`) — fine for this project's current scope, but don't copy that pattern into something with real authz stakes without revisiting it.

@@ -13,8 +13,9 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { todayIsoDate } from "@/utils/format";
+import { formatQuantity, todayIsoDate } from "@/utils/format";
 import { blockDigits, blockLetters } from "@/utils/inputGuards";
+import { PRODUCT_UNIT_LABELS } from "@/types/product";
 
 const schema = z.object({
   institutionId: z
@@ -44,11 +45,14 @@ export function DistributionFormModal({ onClose }: DistributionFormModalProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { distributionDate: todayIsoDate() },
   });
+
+  const selectedProduct = products?.find((p) => p.id === Number(watch("productId")));
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
@@ -93,10 +97,19 @@ export function DistributionFormModal({ onClose }: DistributionFormModalProps) {
           <option value="">Selecione um produto</option>
           {products?.map((product) => (
             <option key={product.id} value={product.id}>
-              {product.name}
+              {product.name} (disponível: {formatQuantity(product.currentStock)}{" "}
+              {PRODUCT_UNIT_LABELS[product.unit]})
             </option>
           ))}
         </Select>
+        {selectedProduct && (
+          <p className="-mt-2 text-xs text-slate-500">
+            Estoque disponível de {selectedProduct.name}:{" "}
+            <strong>
+              {formatQuantity(selectedProduct.currentStock)} {PRODUCT_UNIT_LABELS[selectedProduct.unit]}
+            </strong>
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Quantidade"

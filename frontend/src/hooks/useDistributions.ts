@@ -25,6 +25,10 @@ export function useCreateDistribution() {
       const { data } = await api.post<Distribution>("/distributions", payload);
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [KEY] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [KEY] });
+      // A distribution decrements the distributed product's stock balance.
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }

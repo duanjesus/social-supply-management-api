@@ -30,6 +30,16 @@ export function useAllProducts() {
   });
 }
 
+export function useLowStockProducts() {
+  return useQuery({
+    queryKey: [KEY, "low-stock"],
+    queryFn: async () => {
+      const { data } = await api.get<Product[]>("/products/low-stock");
+      return data;
+    },
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({

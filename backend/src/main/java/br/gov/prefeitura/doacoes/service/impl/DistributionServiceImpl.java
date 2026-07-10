@@ -5,6 +5,7 @@ import br.gov.prefeitura.doacoes.dto.response.DistributionResponseDTO;
 import br.gov.prefeitura.doacoes.entity.Distribution;
 import br.gov.prefeitura.doacoes.entity.Institution;
 import br.gov.prefeitura.doacoes.entity.Product;
+import br.gov.prefeitura.doacoes.exception.BusinessException;
 import br.gov.prefeitura.doacoes.exception.ResourceNotFoundException;
 import br.gov.prefeitura.doacoes.mapper.DistributionMapper;
 import br.gov.prefeitura.doacoes.repository.DistributionRepository;
@@ -35,6 +36,12 @@ public class DistributionServiceImpl implements DistributionService {
         Product product = productRepository.findById(dto.productId())
                 .orElseThrow(() -> ResourceNotFoundException.of("Produto", dto.productId()));
 
+        if (product.getCurrentStock().compareTo(dto.quantity()) < 0) {
+            throw new BusinessException(
+                    "Estoque insuficiente de " + product.getName() + ". Disponível: "
+                            + product.getCurrentStock() + " " + product.getUnit());
+        }
+
         Distribution distribution = Distribution.builder()
                 .institution(institution)
                 .product(product)
@@ -45,6 +52,10 @@ public class DistributionServiceImpl implements DistributionService {
                 .build();
 
         Distribution saved = distributionRepository.save(distribution);
+
+        product.setCurrentStock(product.getCurrentStock().subtract(dto.quantity()));
+        productRepository.save(product);
+
         return distributionMapper.toResponseDto(saved);
     }
 

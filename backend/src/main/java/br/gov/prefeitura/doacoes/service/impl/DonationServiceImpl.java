@@ -39,6 +39,10 @@ public class DonationServiceImpl implements DonationService {
                 .build();
 
         Donation saved = donationRepository.save(donation);
+
+        product.setCurrentStock(product.getCurrentStock().add(dto.quantity()));
+        productRepository.save(product);
+
         return donationMapper.toResponseDto(saved);
     }
 

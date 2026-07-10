@@ -18,6 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +45,8 @@ class ProductServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        requestDTO = new ProductRequestDTO("Arroz", "Arroz branco tipo 1", ProductCategory.ALIMENTO, ProductUnit.KG);
+        requestDTO = new ProductRequestDTO(
+                "Arroz", "Arroz branco tipo 1", ProductCategory.ALIMENTO, ProductUnit.KG, BigDecimal.TEN);
 
         product = Product.builder()
                 .id(1L)
@@ -51,6 +54,8 @@ class ProductServiceImplTest {
                 .description(requestDTO.description())
                 .category(requestDTO.category())
                 .unit(requestDTO.unit())
+                .currentStock(BigDecimal.ZERO)
+                .minimumStock(requestDTO.minimumStock())
                 .build();
     }
 
@@ -61,7 +66,8 @@ class ProductServiceImplTest {
         when(productMapper.toEntity(requestDTO)).thenReturn(product);
         when(productRepository.save(any(Product.class))).thenReturn(product);
         when(productMapper.toResponseDto(product)).thenReturn(
-                new ProductResponseDTO(1L, requestDTO.name(), requestDTO.description(), requestDTO.category(), requestDTO.unit())
+                new ProductResponseDTO(1L, requestDTO.name(), requestDTO.description(), requestDTO.category(),
+                        requestDTO.unit(), BigDecimal.ZERO, requestDTO.minimumStock(), false)
         );
 
         ProductResponseDTO response = productService.create(requestDTO);
@@ -69,6 +75,30 @@ class ProductServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.name()).isEqualTo("Arroz");
         verify(productRepository, times(1)).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Deve retornar produtos com estoque igual ou abaixo do mínimo")
+    void deveRetornarProdutosComEstoqueBaixo() {
+        Product lowStockProduct = Product.builder()
+                .id(2L)
+                .name("Feijão")
+                .category(ProductCategory.ALIMENTO)
+                .unit(ProductUnit.KG)
+                .currentStock(BigDecimal.valueOf(2))
+                .minimumStock(BigDecimal.TEN)
+                .build();
+
+        when(productRepository.findLowStock()).thenReturn(List.of(lowStockProduct));
+        when(productMapper.toResponseDto(lowStockProduct)).thenReturn(
+                new ProductResponseDTO(2L, "Feijão", null, ProductCategory.ALIMENTO, ProductUnit.KG,
+                        BigDecimal.valueOf(2), BigDecimal.TEN, true)
+        );
+
+        List<ProductResponseDTO> response = productService.findLowStock();
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).lowStock()).isTrue();
     }
 
     @Test

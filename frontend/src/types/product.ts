@@ -33,6 +33,9 @@ export interface Product {
   description: string | null;
   category: ProductCategory;
   unit: ProductUnit;
+  currentStock: number;
+  minimumStock: number | null;
+  lowStock: boolean;
 }
 
 export interface ProductRequest {
@@ -40,4 +43,5 @@ export interface ProductRequest {
   description?: string;
   category: ProductCategory;
   unit: ProductUnit;
+  minimumStock?: number;
 }

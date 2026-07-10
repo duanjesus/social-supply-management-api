@@ -100,8 +100,8 @@ Each package is independently runnable and documented — see their READMEs for 
 - [x] **V1** — Core registrations (institutions, products), donations and distributions
 - [x] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
 - [x] **V2** — React frontend consuming the API, monorepo structure
-- [ ] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
-- [ ] **V3** — Dashboard with metrics (families served, most-donated products, most active institutions)
+- [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
+- [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts)
 - [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
 - [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 

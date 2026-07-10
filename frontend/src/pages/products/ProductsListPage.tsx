@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Pagination } from "@/components/ui/Pagination";
 import { ProductFormModal } from "@/pages/products/ProductFormModal";
+import { formatQuantity } from "@/utils/format";
 
 export function ProductsListPage() {
   const { isAdmin } = useAuth();
@@ -66,6 +67,7 @@ export function ProductsListPage() {
                   <th className="px-4 py-3 font-medium">Nome</th>
                   <th className="px-4 py-3 font-medium">Categoria</th>
                   <th className="px-4 py-3 font-medium">Unidade</th>
+                  <th className="px-4 py-3 font-medium">Estoque</th>
                   <th className="px-4 py-3 font-medium">Descrição</th>
                   <th className="px-4 py-3 font-medium text-right">Ações</th>
                 </tr>
@@ -78,6 +80,12 @@ export function ProductsListPage() {
                       <Badge tone="blue">{PRODUCT_CATEGORY_LABELS[product.category]}</Badge>
                     </td>
                     <td className="px-4 py-3 text-slate-600">{PRODUCT_UNIT_LABELS[product.unit]}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-600">{formatQuantity(product.currentStock)}</span>
+                        {product.lowStock && <Badge tone="red">Estoque baixo</Badge>}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-slate-600">{product.description ?? "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">

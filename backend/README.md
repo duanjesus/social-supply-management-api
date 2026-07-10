@@ -194,15 +194,20 @@ curl -X PATCH http://localhost:8080/api/v1/users/2/role \
 
 ### Products — `/api/v1/products`
 
-| Method | Route                    | Description               |
-|--------|--------------------------|-----------------------------|
-| POST   | `/api/v1/products`        | Register a product          |
-| PUT    | `/api/v1/products/{id}`   | Update a product             |
-| DELETE | `/api/v1/products/{id}`   | Delete a product (ADMIN)     |
-| GET    | `/api/v1/products/{id}`   | Find product by ID           |
-| GET    | `/api/v1/products`        | List products (paginated)    |
+Each product carries a **stock balance** (`currentStock`) that the API maintains automatically — it is never set directly by the client. It increments when a donation of that product is registered, and decrements when a distribution is registered. An optional `minimumStock` threshold can be set per product; when `currentStock` drops to or below it, the product shows up in `/products/low-stock` and `lowStock: true` in its response.
+
+| Method | Route                      | Description                                    |
+|--------|-----------------------------|--------------------------------------------------|
+| POST   | `/api/v1/products`          | Register a product (optional `minimumStock`)     |
+| PUT    | `/api/v1/products/{id}`     | Edit a product (name/category/unit/minimumStock) |
+| DELETE | `/api/v1/products/{id}`     | Delete a product (ADMIN)                         |
+| GET    | `/api/v1/products/{id}`     | Find product by ID                               |
+| GET    | `/api/v1/products`          | List products (paginated)                        |
+| GET    | `/api/v1/products/low-stock`| List products at or below their minimum stock    |
 
 ### Donations — `/api/v1/donations`
+
+Registering a donation adds its `quantity` to the donated product's `currentStock`.
 
 | Method | Route                      | Description            |
 |--------|-----------------------------|--------------------------|
@@ -212,9 +217,11 @@ curl -X PATCH http://localhost:8080/api/v1/users/2/role \
 
 ### Distributions — `/api/v1/distributions`
 
+Registering a distribution subtracts its `quantity` from the distributed product's `currentStock`. If the product doesn't have enough stock, the request fails with `422 Unprocessable Entity` and no distribution is created.
+
 | Method | Route                           | Description                  |
 |--------|-----------------------------------|---------------------------------|
-| POST   | `/api/v1/distributions`         | Register a distribution         |
+| POST   | `/api/v1/distributions`         | Register a distribution (fails if stock is insufficient) |
 | GET    | `/api/v1/distributions/{id}`    | Find distribution by ID          |
 | GET    | `/api/v1/distributions`         | List distributions (paginated)   |
 
@@ -225,9 +232,10 @@ curl -X PATCH http://localhost:8080/api/v1/users/2/role \
 - [x] **V1** — Core registrations (institutions, products), donations and distributions
 - [x] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
 - [x] **V2** — React frontend consuming the API (see [../frontend](../frontend))
-- [ ] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
-- [ ] **V3** — Dashboard with metrics (families served, most-donated products, most active institutions)
+- [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
+- [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts)
 - [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
+- [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 
 ---
 

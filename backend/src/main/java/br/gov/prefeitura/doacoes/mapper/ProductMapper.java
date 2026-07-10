@@ -14,6 +14,7 @@ public class ProductMapper {
                 .description(dto.description())
                 .category(dto.category())
                 .unit(dto.unit())
+                .minimumStock(dto.minimumStock())
                 .build();
     }
 
@@ -22,15 +23,22 @@ public class ProductMapper {
         entity.setDescription(dto.description());
         entity.setCategory(dto.category());
         entity.setUnit(dto.unit());
+        entity.setMinimumStock(dto.minimumStock());
     }
 
     public ProductResponseDTO toResponseDto(Product entity) {
+        boolean lowStock = entity.getMinimumStock() != null
+                && entity.getCurrentStock().compareTo(entity.getMinimumStock()) <= 0;
+
         return new ProductResponseDTO(
                 entity.getId(),
                 entity.getName(),
                 entity.getDescription(),
                 entity.getCategory(),
-                entity.getUnit()
+                entity.getUnit(),
+                entity.getCurrentStock(),
+                entity.getMinimumStock(),
+                lowStock
         );
     }
 

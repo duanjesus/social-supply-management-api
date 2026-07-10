@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 import { api } from "@/lib/api";
 import type { Page } from "@/types/common";
@@ -6,7 +7,10 @@ import { useAuth } from "@/context/AuthContext";
 import { useDonations, useAllDonations } from "@/hooks/useDonations";
 import { useDistributions } from "@/hooks/useDistributions";
 import { useAllInstitutions } from "@/hooks/useInstitutions";
+import { useLowStockProducts } from "@/hooks/useProducts";
+import { PRODUCT_UNIT_LABELS } from "@/types/product";
 import { Spinner } from "@/components/ui/Spinner";
+import { Badge } from "@/components/ui/Badge";
 import { formatCount, formatDate, formatQuantity, isInCurrentMonth } from "@/utils/format";
 
 function useCount(resource: string) {
@@ -64,6 +68,7 @@ export function DashboardPage() {
 
   const recentDonations = useDonations(0, 5);
   const recentDistributions = useDistributions(0, 5);
+  const lowStockProducts = useLowStockProducts();
 
   return (
     <div className="flex flex-col gap-6">
@@ -106,6 +111,27 @@ export function DashboardPage() {
           />
         </div>
       </div>
+
+      {!lowStockProducts.isLoading && !!lowStockProducts.data?.length && (
+        <div className="overflow-hidden rounded-lg border border-red-200 bg-red-50 shadow-sm">
+          <div className="border-b border-red-200 px-4 py-3">
+            <h2 className="text-sm font-semibold text-red-800">⚠️ Estoque baixo</h2>
+          </div>
+          <ul className="divide-y divide-red-100">
+            {lowStockProducts.data.map((product) => (
+              <li key={product.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <Link to="/products" className="font-medium text-red-900 hover:underline">
+                  {product.name}
+                </Link>
+                <Badge tone="red">
+                  {formatQuantity(product.currentStock)} / mínimo {formatQuantity(product.minimumStock ?? 0)}{" "}
+                  {PRODUCT_UNIT_LABELS[product.unit]}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white shadow-sm">

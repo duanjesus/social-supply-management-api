@@ -27,6 +27,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,6 +62,7 @@ class DonationServiceImplTest {
                 .name("Arroz")
                 .category(ProductCategory.ALIMENTO)
                 .unit(ProductUnit.KG)
+                .currentStock(BigDecimal.valueOf(10))
                 .build();
 
         donation = Donation.builder()
@@ -79,9 +81,11 @@ class DonationServiceImplTest {
     void deveRegistrarDoacaoComSucesso() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(donationRepository.save(any(Donation.class))).thenReturn(donation);
+        when(productRepository.save(any(Product.class))).thenReturn(product);
         when(donationMapper.toResponseDto(donation)).thenReturn(
                 new DonationResponseDTO(1L, requestDTO.donorName(), requestDTO.donorDocument(),
-                        new ProductResponseDTO(1L, "Arroz", null, ProductCategory.ALIMENTO, ProductUnit.KG),
+                        new ProductResponseDTO(1L, "Arroz", null, ProductCategory.ALIMENTO, ProductUnit.KG,
+                                BigDecimal.valueOf(60), null, false),
                         requestDTO.quantity(), requestDTO.donationDate(), requestDTO.description())
         );
 
@@ -90,6 +94,25 @@ class DonationServiceImplTest {
         assertThat(response).isNotNull();
         assertThat(response.donorName()).isEqualTo("João da Silva");
         verify(donationRepository, times(1)).save(any(Donation.class));
+    }
+
+    @Test
+    @DisplayName("Deve incrementar o estoque do produto ao registrar a doação")
+    void deveIncrementarEstoqueAoDoar() {
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(donationRepository.save(any(Donation.class))).thenReturn(donation);
+        when(productRepository.save(any(Product.class))).thenReturn(product);
+        when(donationMapper.toResponseDto(donation)).thenReturn(
+                new DonationResponseDTO(1L, requestDTO.donorName(), requestDTO.donorDocument(),
+                        new ProductResponseDTO(1L, "Arroz", null, ProductCategory.ALIMENTO, ProductUnit.KG,
+                                BigDecimal.valueOf(60), null, false),
+                        requestDTO.quantity(), requestDTO.donationDate(), requestDTO.description())
+        );
+
+        donationService.register(requestDTO);
+
+        // starting stock was 10, donation quantity is 50 → expect 60
+        verify(productRepository).save(argThat(p -> p.getCurrentStock().compareTo(BigDecimal.valueOf(60)) == 0));
     }
 
     @Test

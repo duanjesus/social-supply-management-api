@@ -18,13 +18,15 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { blockDigits } from "@/utils/inputGuards";
+import { blockDigits, blockLetters } from "@/utils/inputGuards";
+import { formatQuantity } from "@/utils/format";
 
 const schema = z.object({
   name: z.string().min(1, "O nome do produto é obrigatório").max(150),
   description: z.string().max(500).optional().or(z.literal("")),
   category: z.enum(["ALIMENTO", "HIGIENE", "LIMPEZA", "VESTUARIO", "OUTROS"]),
   unit: z.enum(["KG", "LITRO", "UNIDADE", "CAIXA", "PACOTE"]),
+  minimumStock: z.coerce.number().min(0, "O estoque mínimo não pode ser negativo").optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -51,6 +53,7 @@ export function ProductFormModal({ product, onClose }: ProductFormModalProps) {
       description: product?.description ?? "",
       category: product?.category ?? "ALIMENTO",
       unit: product?.unit ?? "UNIDADE",
+      minimumStock: product?.minimumStock ?? undefined,
     },
   });
 
@@ -61,6 +64,7 @@ export function ProductFormModal({ product, onClose }: ProductFormModalProps) {
       description: values.description || undefined,
       category: values.category,
       unit: values.unit,
+      minimumStock: values.minimumStock === "" ? undefined : Number(values.minimumStock),
     };
 
     try {
@@ -108,6 +112,22 @@ export function ProductFormModal({ product, onClose }: ProductFormModalProps) {
             ))}
           </Select>
         </div>
+        <Input
+          label="Estoque mínimo (alerta)"
+          type="number"
+          min={0}
+          placeholder="Ex: 10 (opcional)"
+          error={errors.minimumStock?.message as string | undefined}
+          onKeyDown={blockLetters}
+          {...register("minimumStock")}
+        />
+        {isEditing && (
+          <p className="rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-500">
+            Estoque atual: <strong>{formatQuantity(product.currentStock)}</strong>{" "}
+            {PRODUCT_UNIT_LABELS[product.unit]}. Esse valor é calculado automaticamente pelas
+            doações e distribuições registradas — não pode ser editado diretamente aqui.
+          </p>
+        )}
         <div className="mt-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar

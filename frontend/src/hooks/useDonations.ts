@@ -43,6 +43,10 @@ export function useCreateDonation() {
       const { data } = await api.post<Donation>("/donations", payload);
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [KEY] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [KEY] });
+      // A donation increments the donated product's stock balance.
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 }

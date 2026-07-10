@@ -4,7 +4,10 @@ import br.gov.prefeitura.doacoes.entity.enums.ProductCategory;
 import br.gov.prefeitura.doacoes.entity.enums.ProductUnit;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
 
 public record ProductRequestDTO(
 
@@ -19,7 +22,10 @@ public record ProductRequestDTO(
         ProductCategory category,
 
         @NotNull(message = "A unidade de medida é obrigatória")
-        ProductUnit unit
+        ProductUnit unit,
+
+        @PositiveOrZero(message = "O estoque mínimo não pode ser negativo")
+        BigDecimal minimumStock
 
 ) {
 }

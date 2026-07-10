@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -44,6 +45,12 @@ public class ProductController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         productService.delete(id);
+    }
+
+    @GetMapping("/low-stock")
+    @Operation(summary = "Listar produtos com estoque igual ou abaixo do mínimo configurado")
+    public ResponseEntity<List<ProductResponseDTO>> findLowStock() {
+        return ResponseEntity.ok(productService.findLowStock());
     }
 
     @GetMapping("/{id}")
