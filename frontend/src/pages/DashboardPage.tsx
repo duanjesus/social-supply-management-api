@@ -5,13 +5,16 @@ import { api } from "@/lib/api";
 import type { Page } from "@/types/common";
 import { useAuth } from "@/context/AuthContext";
 import { useDonations, useAllDonations } from "@/hooks/useDonations";
-import { useDistributions } from "@/hooks/useDistributions";
+import { useDistributions, useAllDistributions } from "@/hooks/useDistributions";
 import { useAllInstitutions } from "@/hooks/useInstitutions";
 import { useLowStockProducts } from "@/hooks/useProducts";
 import { PRODUCT_UNIT_LABELS } from "@/types/product";
 import { Spinner } from "@/components/ui/Spinner";
 import { Badge } from "@/components/ui/Badge";
+import { TopBarList } from "@/components/charts/TopBarList";
+import { TrendChart } from "@/components/charts/TrendChart";
 import { formatCount, formatDate, formatQuantity, isInCurrentMonth } from "@/utils/format";
+import { monthlyTrend, topAttendedInstitutions, topDonatedProducts } from "@/utils/aggregate";
 
 function useCount(resource: string) {
   return useQuery({
@@ -69,6 +72,16 @@ export function DashboardPage() {
   const recentDonations = useDonations(0, 5);
   const recentDistributions = useDistributions(0, 5);
   const lowStockProducts = useLowStockProducts();
+  const allDistributions = useAllDistributions();
+
+  const trendLoading = allDonations.isLoading || allDistributions.isLoading;
+  const trendData =
+    allDonations.data && allDistributions.data
+      ? monthlyTrend(allDonations.data, allDistributions.data)
+      : [];
+
+  const topProducts = allDonations.data ? topDonatedProducts(allDonations.data) : [];
+  const topInstitutions = allDistributions.data ? topAttendedInstitutions(allDistributions.data) : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -132,6 +145,67 @@ export function DashboardPage() {
           </ul>
         </div>
       )}
+
+      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h2 className="text-sm font-semibold text-slate-900">Doações e distribuições — últimos 6 meses</h2>
+        </div>
+        {trendLoading ? (
+          <div className="flex justify-center p-10">
+            <Spinner />
+          </div>
+        ) : (
+          <TrendChart data={trendData} />
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-3">
+            <h2 className="text-sm font-semibold text-slate-900">Produtos mais doados</h2>
+          </div>
+          {allDonations.isLoading ? (
+            <div className="flex justify-center p-6">
+              <Spinner />
+            </div>
+          ) : topProducts.length === 0 ? (
+            <p className="p-4 text-sm text-slate-500">Nenhuma doação registrada ainda.</p>
+          ) : (
+            <TopBarList
+              color="#2a78d6"
+              items={topProducts.map((product) => ({
+                id: product.productId,
+                label: product.name,
+                value: product.totalQuantity,
+                displayValue: `${formatQuantity(product.totalQuantity)} ${PRODUCT_UNIT_LABELS[product.unit]}`,
+              }))}
+            />
+          )}
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-200 px-4 py-3">
+            <h2 className="text-sm font-semibold text-slate-900">Instituições mais atendidas</h2>
+          </div>
+          {allDistributions.isLoading ? (
+            <div className="flex justify-center p-6">
+              <Spinner />
+            </div>
+          ) : topInstitutions.length === 0 ? (
+            <p className="p-4 text-sm text-slate-500">Nenhuma distribuição registrada ainda.</p>
+          ) : (
+            <TopBarList
+              color="#1baf7a"
+              items={topInstitutions.map((institution) => ({
+                id: institution.institutionId,
+                label: institution.name,
+                value: institution.distributionCount,
+                displayValue: `${institution.distributionCount} entrega${institution.distributionCount === 1 ? "" : "s"}`,
+              }))}
+            />
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white shadow-sm">

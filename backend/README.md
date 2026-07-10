@@ -233,7 +233,7 @@ Registering a distribution subtracts its `quantity` from the distributed product
 - [x] **V2** — Authentication and authorization with JWT (login, ADMIN/OPERATOR roles)
 - [x] **V2** — React frontend consuming the API (see [../frontend](../frontend))
 - [x] **V3** — Real-time inventory control (stock balance per product, low-quantity alerts)
-- [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts)
+- [x] **V3** — Dashboard with metrics (families served, donations this month, low-stock alerts, top donated products, most-attended institutions, 6-month trend)
 - [ ] **V3** — Exportable reports (PDF/Excel) by period and institution
 - [ ] **V3** — Automated deployment (Railway/Render/AWS) via GitHub Actions
 
